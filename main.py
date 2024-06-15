@@ -1,11 +1,14 @@
 import requests
+import threading
+import time
+from fake_useragent import UserAgent
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By 
-from webdriver_manager.chrome import ChromeDriverManager
-from selenium.webdriver.chrome.options import Options
-import threading
-import time
+from selenium.webdriver.common.keys import Keys
+from webdriver_manager.firefox import GeckoDriverManager
+from selenium.webdriver.firefox.options import Options
+
 
 proxies = []
 keys = ['ip','port','username','password']
@@ -16,23 +19,41 @@ with open('proxy.txt','r') as proxies_file:
         
 print(proxies)
 
+
+# Function to get a random user agent
+def get_random_user_agent():
+    ua = UserAgent()
+    print(ua.random)
+    return ua.random
+
+
 def start_browser(proxy):
-    # Start Adspower profile
+
+   
     
+    options = Options()
+    options.set_preference("general.useragent.override", get_random_user_agent())
 
-    # Configure Selenium WebDriver with Adspower proxy
-    chrome_options = Options()
-    chrome_options.add_argument(f'--proxy-server={proxy['ip']}:{proxy['port']}')
-
+    ## Define Your Proxy Endpoint
     # Start WebDriver
-    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
+    driver = webdriver.Firefox(service=Service('geckodriver.exe') ,options=options)
+
+    time.sleep(2)
+
+    # alert = webdriver.switch_to.alert()
+    # print("switched to alert window")
+    # alert.send_keys(proxy['username'] + Keys.TAB + proxy['password'])
+    # alert.accept()
+    # webdriver.switch_to.default_content()
 
     # Use WebDriver as usual
-    driver.get('https://whatismyipaddress.com/')
+    print(driver.execute_script("return navigator.userAgent;"))
+    driver.get('https://www.youtube.com/watch?v=rAm5FOo_oD8')
 
+    
     # Perform desired actions here
     time.sleep(3)
-    print(driver.find_element(By.ID,'ipv4').text())
+    print(driver.find_element(By.ID,'ipv4').text)
 
     # Close the WebDriver
     driver.quit()
@@ -40,14 +61,17 @@ def start_browser(proxy):
 # List to keep track of threads
 threads = []
 
+
+start_browser(proxies[-1])
+
 # Create and start threads for each profile
-for i in range(4):
-    thread = threading.Thread(target=start_browser, args=(proxies[i],))
-    threads.append(thread)
-    thread.start()
+# for i in range(4):
+#     thread = threading.Thread(target=start_browser, args=(proxies[i],))
+#     threads.append(thread)
+#     thread.start()
 
 # Wait for all threads to complete
-for thread in threads:
-    thread.join()
+# for thread in threads:
+#     thread.join()
 
 # print("All browsers have been started and closed.")
